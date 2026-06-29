@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M5Guruguru-Starter - Image Uploader</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 { color: #ff99cc; }
+    .step { margin: 30px 0; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      max-width: 450px;
+      margin: 20px auto;
+      justify-content: center;
+    }
+    .slot {
+      border: 2px dashed #ff99cc;
+      border-radius: 12px;
+      background: #222;
+      width: 130px;
+      height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .slot.dragover {
+      border-color: #ff66aa;
+      background: #331122;
+    }
+    .slot img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+    .label {
+      position: absolute;
+      bottom: 6px;
+      font-size: 0.85em;
+      color: #aaa;
+      background: rgba(0,0,0,0.6);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    button {
+      background: #ff66aa;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      margin: 10px;
+      border-radius: 999px;
+      font-size: 1.1em;
+      cursor: pointer;
+    }
+    button:hover { background: #ff99cc; }
+    .progress-container {
+      max-width: 500px;
+      margin: 30px auto;
+    }
+    .progress {
+      height: 12px;
+      background: #333;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff66aa, #ff99cc);
+      transition: width 0.3s;
+    }
+    .status {
+      margin: 15px;
+      font-weight: bold;
+      color: #ffccdd;
+    }
+  </style>
+</head>
+<body>
+  <h1>M5Guruguru-Starter</h1>
+  <p id="subtitle"></p>
+
+  <!-- Step 1 -->
+  <div class="step">
+    <h2 id="step1title"></h2>
+    <div class="grid" id="openGrid"></div>
+    <button onclick="uploadStep(1)" id="btn1"></button>
+    <div class="progress-container">
+      <div class="progress"><div class="bar" id="progressBar1"></div></div>
+    </div>
+    <div class="status" id="status1"></div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step">
+    <h2 id="step2title"></h2>
+    <div class="grid" id="closeGrid"></div>
+    <button onclick="uploadStep(2)" id="btn2"></button>
+    <div class="progress-container">
+      <div class="progress"><div class="bar" id="progressBar2"></div></div>
+    </div>
+    <div class="status" id="status2"></div>
+  </div>
+
+  <script>
+    const i18n = {
+      ja: {
+        subtitle:    '可愛いぐるぐるアバターの画像をアップロードしよう！',
+        step1title:  'ステップ1：基本パターン（dir0.png 〜 dir8.png）',
+        step2title:  'ステップ2：目をつぶったパターン（オプション）',
+        btn1:        'ステップ1をアップロード',
+        btn2:        'ステップ2をアップロード',
+        standby:     '待機中...（各マスにドラッグ＆ドロップOK）',
+        noFiles:     (step) => `ステップ${step} にアップロードする画像がありません`,
+        uploading:   (step) => `ステップ${step} アップロード中...`,
+        done:        (step) => `✅ ステップ${step} 完了しました！`,
+      },
+      en: {
+        subtitle:    'Upload images for your cute guruguru avatar!',
+        step1title:  'Step 1: Basic patterns (dir0.png – dir8.png)',
+        step2title:  'Step 2: Eyes-closed patterns (optional)',
+        btn1:        'Upload Step 1',
+        btn2:        'Upload Step 2',
+        standby:     'Waiting... (drag & drop onto each slot)',
+        noFiles:     (step) => `No images selected for Step ${step}`,
+        uploading:   (step) => `Uploading Step ${step}...`,
+        done:        (step) => `✅ Step ${step} complete!`,
+      },
+      zh: {
+        subtitle:    '上传可爱咕噜咕噜头像的图片吧！',
+        step1title:  '步骤1：基本图案（dir0.png ～ dir8.png）',
+        step2title:  '步骤2：闭眼图案（可选）',
+        btn1:        '上传步骤1',
+        btn2:        '上传步骤2',
+        standby:     '等待中...（每个格子都可以拖拽投放）',
+        noFiles:     (step) => `步骤${step} 没有要上传的图片`,
+        uploading:   (step) => `步骤${step} 上传中...`,
+        done:        (step) => `✅ 步骤${step} 完成！`,
+      },
+    };
+
+    const lang = navigator.language.startsWith('ja') ? 'ja'
+               : navigator.language.startsWith('zh') ? 'zh'
+               : 'en';
+    const t = i18n[lang];
+
+    function applyI18n() {
+      document.getElementById('subtitle').textContent   = t.subtitle;
+      document.getElementById('step1title').textContent = t.step1title;
+      document.getElementById('step2title').textContent = t.step2title;
+      document.getElementById('btn1').textContent       = t.btn1;
+      document.getElementById('btn2').textContent       = t.btn2;
+      document.getElementById('status1').textContent    = t.standby;
+      document.getElementById('status2').textContent    = t.standby;
+    }
+
+    function createGrid(containerId, isClose) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.dataset.index = i;
+        slot.dataset.isClose = isClose;
+
+        slot.innerHTML = `
+          <img id="preview${isClose?'C':''}${i}" src="" alt="">
+          <div class="label">dir${i}${isClose?'_close':''}.png</div>
+        `;
+
+        slot.addEventListener('click', () => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.onchange = (e) => handleFile(e.target.files[0], i, isClose, slot);
+          input.click();
+        });
+
+        slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('dragover'); });
+        slot.addEventListener('dragleave', () => slot.classList.remove('dragover'));
+        slot.addEventListener('drop', e => {
+          e.preventDefault();
+          slot.classList.remove('dragover');
+          const file = e.dataTransfer.files[0];
+          if (file) handleFile(file, i, isClose, slot);
+        });
+
+        container.appendChild(slot);
+      }
+    }
+
+    function handleFile(file, idx, isClose, slot) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        document.getElementById(`preview${isClose?'C':''}${idx}`).src = ev.target.result;
+        slot._file = file;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function uploadStep(step) {
+      const progressBar = document.getElementById(`progressBar${step}`);
+      const status = document.getElementById(`status${step}`);
+      const isClose = (step === 2);
+      const gridId = isClose ? 'closeGrid' : 'openGrid';
+      const slots = document.querySelectorAll(`#${gridId} .slot`);
+
+      let uploaded = 0;
+      const total = Array.from(slots).filter(s => s._file).length;
+
+      if (total === 0) {
+        status.textContent = t.noFiles(step);
+        return;
+      }
+
+      status.textContent = t.uploading(step);
+      progressBar.style.width = "0%";
+
+      for (let slot of slots) {
+        if (slot._file) {
+          const i = parseInt(slot.dataset.index);
+          const filename = `dir${i}${isClose ? '_close' : ''}.png`;
+          await uploadFile(slot._file, filename, progressBar, total, ++uploaded);
+        }
+      }
+
+      status.textContent = t.done(step);
+      progressBar.style.width = "100%";
+    }
+
+    async function uploadFile(file, filename, progressBar, total, current) {
+      const formData = new FormData();
+      formData.append('file', file, filename);
+
+      try {
+        const res = await fetch('/upload', { method: 'POST', body: formData });
+        if (!res.ok) console.error('Upload failed:', filename);
+      } catch (e) { console.error(e); }
+
+      const percent = Math.round((current / total) * 100);
+      progressBar.style.width = percent + "%";
+    }
+
+    window.onload = () => {
+      applyI18n();
+      createGrid('openGrid', false);
+      createGrid('closeGrid', true);
+    };
+  </script>
+</body>
+</html>

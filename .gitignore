@@ -1,0 +1,10 @@
+.pio
+.cache
+.dummy
+.vscode/
+include/
+lib/
+test/
+compile_commands.json
+*.bin
+.DS_Store
