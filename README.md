@@ -31,15 +31,15 @@ Nine PNG files, one per direction. Any size works, but ~250×240px is recommende
 
 | File | Direction |
 |---|---|
-| dir0.png | Up |
-| dir1.png | Upper-right |
-| dir2.png | Right |
-| dir3.png | Lower-right |
-| dir4.png | Down |
-| dir5.png | Lower-left |
-| dir6.png | Left |
-| dir7.png | Upper-left |
-| dir8.png | Front |
+| dir0.png | Top-Left |
+| dir1.png | Top |
+| dir2.png | Top-Right |
+| dir3.png | Left |
+| dir4.png | Center (Front) — Default |
+| dir5.png | Right |
+| dir6.png | Bottom-Left |
+| dir7.png | Bottom |
+| dir8.png | Bottom-Right |
 
 #### Optional files (dir0_close.png – dir8_close.png)
 
